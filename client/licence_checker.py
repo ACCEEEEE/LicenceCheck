@@ -7,7 +7,7 @@ def get_hwid():
 
 def check_license(license_key):
     hwid = get_hwid()
-    res = requests.post("https://your-vercel-project.vercel.app/api/verify", json={"key": license_key, "hwid": hwid})
+    res = requests.post("https://licence-check-ak47.vercel.app/api/verify", json={"key": license_key, "hwid": hwid})
     return res.json()
 
 if __name__ == "__main__":
