@@ -21,7 +21,7 @@ export default async function handler(req, res) {
     for (const existingKey in allData) {
       const entry = allData[existingKey];
       if (entry.used && entry.hwid === hwid && existingKey !== key) {
-        return res.status(403).json({ success: false, message: 'This HWID is already linked to another license' });
+        return res.status(403).json({ success: false, message: 'You already have a Key Activated.' });
       }
     }
 
