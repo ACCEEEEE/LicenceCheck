@@ -11,8 +11,21 @@ export default async function handler(req, res) {
 
   const firebaseUrl = process.env.FIREBASE_DB_URL;
   const licenseUrl = `${firebaseUrl}/licenses/${key}.json`;
+  const licensesListUrl = `${firebaseUrl}/licenses.json`;
 
   try {
+    // Check if this HWID has already used a key
+    const allLicenses = await fetch(licensesListUrl);
+    const allData = await allLicenses.json();
+
+    for (const existingKey in allData) {
+      const entry = allData[existingKey];
+      if (entry.used && entry.hwid === hwid && existingKey !== key) {
+        return res.status(403).json({ success: false, message: 'This HWID is already linked to another license' });
+      }
+    }
+
+    // Now check the requested key
     const response = await fetch(licenseUrl);
     const data = await response.json();
 
@@ -20,22 +33,20 @@ export default async function handler(req, res) {
       return res.status(403).json({ success: false, message: 'Invalid license key' });
     }
 
-    // Check if expired
     const currentTime = Date.now();
-    const expireAfter = 5 * 60 * 60 * 1000; // 5 hours in ms
+    const expireAfter = 5 * 60 * 60 * 1000; // 5 hours
 
     if (data.timestamp && currentTime - data.timestamp > expireAfter) {
-      // Delete expired key
       await fetch(licenseUrl, { method: 'DELETE' });
       return res.status(403).json({ success: false, message: 'License expired and deleted' });
     }
 
-    // First-time use: bind HWID and timestamp
     if (!data.used) {
+      // First time use: bind and store timestamp
       await fetch(licenseUrl, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hwid: hwid, used: true, timestamp: currentTime }),
+        body: JSON.stringify({ hwid, used: true, timestamp: currentTime }),
       });
       return res.status(200).json({ success: true, message: 'License bound to HWID' });
     }
