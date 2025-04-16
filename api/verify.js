@@ -34,7 +34,7 @@ export default async function handler(req, res) {
     }
 
     const currentTime = Date.now();
-    const expireAfter = 5 * 60 * 60 * 1000; // 5 hours
+    const expireAfter = 5 * 60 * 1000; // 5 mins
 
     if (data.timestamp && currentTime - data.timestamp > expireAfter) {
       await fetch(licenseUrl, { method: 'DELETE' });
