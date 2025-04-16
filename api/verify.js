@@ -1,28 +1,20 @@
 // /api/verify.js
+
 export default async function handler(req, res) {
-    const { license, hwid } = req.query;
-  
-    // Example Firebase fetch:
-    const firebase = await fetch('https://yourproject.firebaseio.com/licenses.json');
-    const data = await firebase.json();
-  
-    if (!data[license]) {
-      return res.status(403).json({ status: 'invalid_license' });
-    }
-  
-    if (!data[license].used) {
-      // Bind HWID
-      await fetch(`https://yourproject.firebaseio.com/licenses/${license}.json`, {
-        method: 'PATCH',
-        body: JSON.stringify({ hwid: hwid, used: true }),
-      });
-      return res.status(200).json({ status: 'license_bound' });
-    }
-  
-    if (data[license].hwid === hwid) {
-      return res.status(200).json({ status: 'valid' });
-    } else {
-      return res.status(403).json({ status: 'hwid_mismatch' });
-    }
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
-  
+
+  const { key, hwid } = req.body;
+
+  if (!key || !hwid) {
+    return res.status(400).json({ error: 'Missing key or hwid' });
+  }
+
+  // Example (fake) logic
+  if (key === 'abc123' && hwid === 'HWID-EXAMPLE') {
+    return res.status(200).json({ success: true, message: 'License verified' });
+  }
+
+  return res.status(403).json({ success: false, message: 'Invalid key or HWID' });
+}
