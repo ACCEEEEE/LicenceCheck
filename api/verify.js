@@ -1,5 +1,3 @@
-// api/verify.js
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -22,12 +20,22 @@ export default async function handler(req, res) {
       return res.status(403).json({ success: false, message: 'Invalid license key' });
     }
 
+    // Check if expired
+    const currentTime = Date.now();
+    const expireAfter = 5 * 60 * 60 * 1000; // 5 hours in ms
+
+    if (data.timestamp && currentTime - data.timestamp > expireAfter) {
+      // Delete expired key
+      await fetch(licenseUrl, { method: 'DELETE' });
+      return res.status(403).json({ success: false, message: 'License expired and deleted' });
+    }
+
+    // First-time use: bind HWID and timestamp
     if (!data.used) {
-      // Bind HWID
       await fetch(licenseUrl, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hwid: hwid, used: true }),
+        body: JSON.stringify({ hwid: hwid, used: true, timestamp: currentTime }),
       });
       return res.status(200).json({ success: true, message: 'License bound to HWID' });
     }
